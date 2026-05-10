@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>専攻科 口頭試問対策（4力80問）</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .flip-card { perspective: 1000px; }
+        .flip-card-inner {
+            transition: transform 0.5s;
+            transform-style: preserve-3d;
+        }
+        .flipped { transform: rotateY(180deg); }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+    </style>
+</head>
+<body class="bg-slate-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- 問題データ (80問) ---
+        const questions = [
+            // 熱工学 (20問)
+            { id: 1, subject: '熱工学', question: '熱力学第1法則を式で示し、各項の意味を説明せよ。', answer: 'Q = ΔU + W。Qは供給熱量、ΔUは内部エネルギーの変化、Wは外部へした仕事を表す。' },
+            { id: 2, subject: '熱工学', question: '熱力学第2法則とは何か。「熱が移動する方向」に着目して説明せよ。', answer: '熱は高温から低温へ自発的に移動するが、その逆は外部から仕事を加えない限り起こらないという不可逆性を表す法則。' },
+            { id: 3, subject: '熱工学', question: '理想気体の状態方程式 PV = nRT において、各変数の単位を答えよ。', answer: 'P: Pa, V: m³, n: mol, R: J/(mol·K), T: K。' },
+            { id: 4, subject: '熱工学', question: '定圧比熱 Cp と定容比熱 Cv の定義をそれぞれ述べよ。', answer: 'Cpは圧力を一定に、Cvは体積を一定に保ったまま、単位質量の物質を1K上昇させるのに必要な熱量。' },
+            { id: 5, subject: '熱工学', question: 'なぜ Cp は Cv より大きいのか。', answer: '定圧変化では、温度上昇だけでなく体積膨張（外部への仕事）にも熱量が消費されるため。' },
+            { id: 6, subject: '熱工学', question: '比熱比 γ とは何か。その値は1より大きいか小さいか。', answer: '定圧比熱と定容比熱の比（γ = Cp / Cv）。常に1より大きい。' },
+            { id: 7, subject: '熱工学', question: '等温変化において、内部エネルギーの変化 ΔU はどうなるか。', answer: '理想気体の場合、内部エネルギーは温度のみに依存するため、ΔU = 0 となる。' },
+            { id: 8, subject: '熱工学', question: '断熱変化において、気体が外部に仕事をしたとき、温度はどう変化するか。', answer: '外部との熱の出入りがない状態で仕事をすると、内部エネルギーが消費されるため温度は低下する。' },
+            { id: 9, subject: '熱工学', question: 'エンタルピー H とは何か。', answer: 'H = U + PV。定圧変化において、系に加えた熱量Qはエンタルピーの変化量 ΔH に等しくなる。' },
+            { id: 10, subject: '熱工学', question: 'カルノーサイクルの4工程を順に述べよ。', answer: '1.等温膨張、2.断熱膨張、3.等温圧縮、4.断熱圧縮。' },
+            { id: 11, subject: '熱工学', question: '熱機関の熱効率 η を、吸熱量 Q1 と放熱量 Q2 で表せ。', answer: 'η = (Q1 - Q2) / Q1 = 1 - (Q2 / Q1)。' },
+            { id: 12, subject: '熱工学', question: 'エントロピーが増大する現象の具体例を挙げよ。', answer: '高温から低温への熱移動や、ガスの拡散など。' },
+            { id: 13, subject: '熱工学', question: 'P-V線図で、サイクルを描く曲線に囲まれた面積は何を表すか。', answer: 'その1サイクルにおいて系が外部に対して行った正味の仕事。' },
+            { id: 14, subject: '熱工学', question: 'ボイル・シャルルの法則を式で示せ。', answer: 'PV / T = 一定。' },
+            { id: 15, subject: '熱工学', question: '理想気体と実在気体の主な違いは。', answer: '理想気体は分子自体の体積がなく、分子間力も働かないと仮定している点。' },
+            { id: 16, subject: '熱工学', question: '内部エネルギーは理想気体の場合、何のみに依存するか。', answer: '絶対温度 T。' },
+            { id: 17, subject: '熱工学', question: '可逆変化と不可逆変化の違いは。', answer: '周囲に変化を残さず元に戻せるのが可逆、摩擦や粘性により戻せないのが不可逆。' },
+            { id: 18, subject: '熱工学', question: '熱伝導、対流、放射のうち、真空中で起こるものは。', answer: '熱放射。' },
+            { id: 19, subject: '熱工学', question: 'フーリエの法則において、熱流束は温度勾配に比例するか。', answer: '比例する。' },
+            { id: 20, subject: '熱工学', question: '蒸気の乾燥度 x とは。', answer: '湿り蒸気中の蒸気の質量割合。飽和液は x=0、乾き飽和蒸気は x=1。' },
+
+            // 流体工学 (20問)
+            { id: 21, subject: '流体工学', question: '粘性係数 μ と動粘性係数 ν の関係を式で示せ。', answer: 'ν = μ / ρ。' },
+            { id: 22, subject: '流体工学', question: 'ニュートン流体とはどのような流体か。', answer: 'せん断応力が、速度勾配に比例する流体。' },
+            { id: 23, subject: '流体工学', question: '毛細管現象が起こる理由は。', answer: '付着力、凝縮力、および表面張力のバランスによる。' },
+            { id: 24, subject: '流体工学', question: '静水圧 p = ρgh において、g と h は何か。', answer: 'gは重力加速度、hは液面からの深さ。' },
+            { id: 25, subject: '流体工学', question: 'パスカルの原理とは。', answer: '密閉容器内の静止流体の一部に加えた圧力は、全部分に等しく伝わる原理。' },
+            { id: 26, subject: '流体工学', question: '連続の式を、断面 A と流速 v で表せ。', answer: 'A1v1 = A2v2（非圧縮性の場合）。' },
+            { id: 27, subject: '流体工学', question: 'ベルヌーイの定理を構成する3つのエネルギー項は。', answer: '圧力、運動、位置エネルギー。' },
+            { id: 28, subject: '流体工学', question: 'ピトー管で流速を測定する原理は。', answer: '全圧と静圧の差（動圧）を測ることで流速を算出する。' },
+            { id: 29, subject: '流体工学', question: 'レイノルズ数 Re は何の力と何の力の比か。', answer: '慣性力と粘性力の比。' },
+            { id: 30, subject: '流体工学', question: '層流と乱流を判別する無次元数は。', answer: 'レイノルズ数（Re）。' },
+            { id: 31, subject: '流体工学', question: '滑りなし条件とは、壁面における流速がどうなることか。', answer: '流速が 0 になること。' },
+            { id: 32, subject: '流体工学', question: '流量 Q を、管内径 d と平均流速 u で表せ。', answer: 'Q = (πd²/4)u。' },
+            { id: 33, subject: '流体工学', question: '管摩擦損失において、損失水頭は流速の何乗に比例するか。', answer: '流速の2乗に比例する。' },
+            { id: 34, subject: '流体工学', question: 'ベルヌーイの定理が成り立つ「理想流体」の条件は。', answer: '非粘性、非圧縮。' },
+            { id: 35, subject: '流体工学', question: '境界層とは何か。', answer: '壁面の粘性の影響を強く受け、速度が急激に変化する薄い層。' },
+            { id: 36, subject: '流体工学', question: '圧力の単位 [Pa] を、[N] と [m] で表せ。', answer: '1 Pa = 1 N/m²。' },
+            { id: 37, subject: '流体工学', question: '揚力が発生する理由は。', answer: '翼の上下で流速差が生じ、ベルヌーイの定理により圧力差が生まれるため。' },
+            { id: 38, subject: '流体工学', question: '全圧、静圧、動圧の関係式は。', answer: '全圧 = 静圧 + 動圧。' },
+            { id: 39, subject: '流体工学', question: 'ベンチュリ管の狭い箇所の圧力は、他より高いか低いか。', answer: '低い（流速が速くなるため）。' },
+            { id: 40, subject: '流体工学', question: '乱流の速度分布を表す式の名称は。', answer: '対数則、または7分の1乗則。' },
+
+            // 材料力学 (20問)
+            { id: 41, subject: '材料力学', question: '垂直応力 σ を、荷重 W と断面積 A で表せ。', answer: 'σ = W / A。' },
+            { id: 42, subject: '材料力学', question: '比例限度内で成り立つ法則は。', answer: 'フックの法則。' },
+            { id: 43, subject: '材料力学', question: 'フックの法則 σ = Eε において、E の名称は。', answer: '縦弾性係数（ヤング率）。' },
+            { id: 44, subject: '材料力学', question: '弾性変形と塑性変形の違いは。', answer: '荷重を除くと元に戻るのが弾性、変形が残るのが塑性。' },
+            { id: 45, subject: '材料力学', question: '降伏点とはどのような点か。', answer: '荷重を増やさなくてもひずみが急増し始める点。' },
+            { id: 46, subject: '材料力学', question: 'ポアソン比の定義は。', answer: '縦ひずみに対する横ひずみの比の絶対値。' },
+            { id: 47, subject: '材料力学', question: '縦弾性係数 E と横弾性係数 G は何の性質を表すか。', answer: 'Eは引張・圧縮、Gはせん断に対する変形しにくさ。' },
+            { id: 48, subject: '材料力学', question: '安全率とは。', answer: '基準強度を許容応力で割った値。' },
+            { id: 49, subject: '材料力学', question: '断面二次モーメント I の物理的な意味は。', answer: '部材の「曲がりにくさ」を表す量。' },
+            { id: 50, subject: '材料力学', question: '長方形断面（幅 b, 高さ h）の断面二次モーメント I は。', answer: 'I = bh³ / 12。' },
+            { id: 51, subject: '材料力学', question: '断面係数 Z を I と最大距離 y で表せ。', answer: 'Z = I / y。' },
+            { id: 52, subject: '材料力学', question: '片持ちはりの自由端に荷重 W をかけた時、最大曲げモーメントの位置は。', answer: '固定端。' },
+            { id: 53, subject: '材料力学', question: '曲げ応力の公式 σ = (M/I)y において、M と I は何か。', answer: 'Mは曲げモーメント、Iは断面二次モーメント。' },
+            { id: 54, subject: '材料力学', question: '引張強さとはどの荷重を指すか。', answer: '材料が耐えられる最大荷重。' },
+            { id: 55, subject: '材料力学', question: '中立軸とは。', answer: '曲げを受けた際、応力が発生せず長さが変化しない線。' },
+            { id: 56, subject: '材料力学', question: 'ねじり剛性に関わる断面二次極モーメントとは。', answer: '軸のねじれにくさを表す量。' },
+            { id: 57, subject: '材料力学', question: '座屈荷重は、部材が長くなるとどうなるか。', answer: '小さくなる（長さの2乗に反比例）。' },
+            { id: 58, subject: '材料力学', question: '熱応力 σ を求める式は。', answer: 'σ = EαΔT。' },
+            { id: 59, subject: '材料力学', question: '最大せん断応力が発生する面は、引張方向から何度傾いているか。', answer: '45度。' },
+            { id: 60, subject: '材料力学', question: '疲労破壊とは。', answer: '静的な強さより小さい荷重が繰り返し作用して破壊すること。' },
+
+            // 機械力学 (20問)
+            { id: 61, subject: '機械力学', question: '運動方程式 F=ma で、質量 m を垂直に持ち上げる加速度 a は。', answer: 'a = (F - mg) / m。' },
+            { id: 62, subject: '機械力学', question: 'モーメントを求める際、力に何を掛けるか。', answer: '中心から作用線までの距離（腕の長さ）。' },
+            { id: 63, subject: '機械力学', question: '偶力が長さ L の棒の両端に垂直に働くときのモーメントは。', answer: 'M = FL。' },
+            { id: 64, subject: '機械力学', question: '慣性モーメント I の物理的意味は。', answer: '回転の「回りにくさ」を表す量。' },
+            { id: 65, subject: '機械力学', question: '質量 m, 半径 r の円板の重心まわりの慣性モーメントは。', answer: 'I = (1/2)mr²。' },
+            { id: 66, subject: '機械力学', question: '円板の半径を 2 倍にすると、慣性モーメントは何倍か。', answer: '4倍。' },
+            { id: 67, subject: '機械力学', question: '回転エネルギーを I と ω で表せ。', answer: 'E = (1/2)Iω²。' },
+            { id: 68, subject: '機械力学', question: '角運動量保存の法則とは。', answer: 'トルクが働かない限り、Iω が一定に保たれる法則。' },
+            { id: 69, subject: '機械力学', question: '仕事とエネルギーの原理を式で示せ。', answer: 'W = ΔK（仕事 = 運動エネルギー変化）。' },
+            { id: 70, subject: '機械力学', question: '反発係数 e = 1 の衝突の名称は。', answer: '弾性衝突。' },
+            { id: 71, subject: '機械力学', question: '固有振動数を決定する2要素は。', answer: 'ばね定数 k と質量 m。' },
+            { id: 72, subject: '機械力学', question: '共振を防ぐにはどうすればよいか。', answer: '外力の振動数を固有振動数から遠ざける。' },
+            { id: 73, subject: '機械力学', question: '減衰（ダンピング）の役割は。', answer: 'エネルギーを散逸させ、振幅を抑えること。' },
+            { id: 74, subject: '機械力学', question: '1自由度系とは。', answer: '状態を表すのに必要な変数が1つである系。' },
+            { id: 75, subject: '機械力学', question: '向心力の向きは。', answer: '常に円の中心方向。' },
+            { id: 76, subject: '機械力学', question: '円運動の加速度 a を r と ω で表せ。', answer: 'a = rω²。' },
+            { id: 77, subject: '機械力学', question: '平行軸の定理はどんな時に使うか。', answer: '重心以外の平行な軸まわりの慣性モーメントを求める時。' },
+            { id: 78, subject: '機械力学', question: '動力 P を トルク T と角速度 ω で表せ。', answer: 'P = Tω。' },
+            { id: 79, subject: '機械力学', question: '位置エネルギー U を表す式は。', answer: 'U = mgh。' },
+            { id: 80, subject: '機械力学', question: '最大静止摩擦力と動摩擦力、大きいのは。', answer: '最大静止摩擦力。' }
+        ];
+
+        function App() {
+            const [gameState, setGameState] = useState('START');
+            const [currentQuestions, setCurrentQuestions] = useState([]);
+            const [currentIndex, setCurrentIndex] = useState(0);
+            const [isFlipped, setIsFlipped] = useState(false);
+            const [results, setResults] = useState([]);
+
+            useEffect(() => {
+                lucide.createIcons();
+            }, [gameState, currentIndex, isFlipped]);
+
+            const startQuiz = (mode) => {
+                let filtered = mode === 'RANDOM' ? [...questions] : questions.filter(q => q.subject === mode);
+                const shuffled = filtered.sort(() => Math.random() - 0.5).slice(0, 10);
+                setCurrentQuestions(shuffled);
+                setCurrentIndex(0);
+                setResults([]);
+                setGameState('QUIZ');
+            };
+
+            const handleAnswer = (isCorrect) => {
+                setResults([...results, { id: currentQuestions[currentIndex].id, isCorrect }]);
+                setIsFlipped(false);
+                if (currentIndex + 1 < currentQuestions.length) {
+                    setCurrentIndex(currentIndex + 1);
+                } else {
+                    setGameState('RESULT');
+                }
+            };
+
+            const score = currentQuestions.length > 0 
+                ? Math.round((results.filter(r => r.isCorrect).length / currentQuestions.length) * 100) 
+                : 0;
+
+            if (gameState === 'START') {
+                return (
+                    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+                        <h1 className="text-3xl font-bold text-slate-800 mb-2">専攻科 口頭試問対策</h1>
+                        <p className="text-slate-500 mb-8 text-center font-medium">機械工学 4力（全80問）フラッシュカード</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
+                            {['熱工学', '流体工学', '材料力学', '機械力学'].map(subject => (
+                                <button key={subject} onClick={() => startQuiz(subject)} className="p-6 bg-white border-2 border-slate-200 rounded-xl hover:border-blue-500 transition-all text-left flex items-center gap-4 group">
+                                    <div className="bg-blue-100 p-3 rounded-lg group-hover:bg-blue-500 group-hover:text-white transition-colors"><i data-lucide="book-open"></i></div>
+                                    <span className="font-bold text-lg text-slate-700">{subject}</span>
+                                </button>
+                            ))}
+                            <button onClick={() => startQuiz('RANDOM')} className="sm:col-span-2 p-6 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-lg transition-all flex items-center justify-center gap-4">
+                                <i data-lucide="shuffle"></i>
+                                <span className="font-bold text-lg">4力ランダムモード (10問)</span>
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (gameState === 'QUIZ') {
+                const q = currentQuestions[currentIndex];
+                return (
+                    <div className="min-h-screen flex flex-col items-center p-4 pt-12">
+                        <div className="w-full max-w-md mb-6 flex justify-between items-center text-slate-500">
+                            <span className="font-bold bg-slate-200 px-3 py-1 rounded-full text-sm">{q.subject}</span>
+                            <span>{currentIndex + 1} / {currentQuestions.length}</span>
+                        </div>
+                        <div className="flip-card w-full max-w-md aspect-[4/3] cursor-pointer" onClick={() => setIsFlipped(!isFlipped)}>
+                            <div className={`flip-card-inner relative w-full h-full ${isFlipped ? 'flipped' : ''}`}>
+                                <div className="absolute inset-0 bg-white border-2 border-slate-200 rounded-2xl shadow-sm flex flex-col items-center justify-center p-8 backface-hidden">
+                                    <p className="text-center text-xl font-bold text-slate-800 leading-relaxed">{q.question}</p>
+                                    <p className="mt-8 text-blue-500 flex items-center gap-2 text-sm"><i data-lucide="refresh-cw" className="w-4 h-4"></i> タップして回答を表示</p>
+                                </div>
+                                <div className="absolute inset-0 bg-blue-50 border-2 border-blue-200 rounded-2xl shadow-sm flex flex-col items-center justify-center p-8 rotate-y-180 backface-hidden">
+                                    <p className="text-center text-lg text-slate-700 leading-relaxed mb-4">{q.answer}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {isFlipped && (
+                            <div className="flex gap-4 mt-12 w-full max-w-md">
+                                <button onClick={(e) => { e.stopPropagation(); handleAnswer(false); }} className="flex-1 bg-white border-2 border-red-200 text-red-500 py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-red-50"><i data-lucide="x-circle"></i> 不正解</button>
+                                <button onClick={(e) => { e.stopPropagation(); handleAnswer(true); }} className="flex-1 bg-green-500 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-green-600 shadow-lg"><i data-lucide="check-circle-2"></i> 正解</button>
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+
+            return (
+                <div className="min-h-screen flex flex-col items-center p-4 py-12">
+                    <div className="w-full max-w-2xl bg-white rounded-3xl shadow-xl p-8 flex flex-col items-center">
+                        <i data-lucide="trophy" className="w-16 h-16 text-yellow-400 mb-4"></i>
+                        <h2 className="text-3xl font-extrabold text-slate-800">Result</h2>
+                        <div className="text-6xl font-black text-blue-600 my-6">{score}%</div>
+                        <div className="w-full space-y-3 mb-8">
+                            {currentQuestions.map((q, idx) => (
+                                <div key={idx} className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100 text-sm">
+                                    <span className="w-6 text-slate-400 font-mono">{idx + 1}</span>
+                                    <span className="flex-1 text-slate-700 font-medium truncate">{q.question}</span>
+                                    {results[idx]?.isCorrect 
+                                        ? <i data-lucide="check-circle-2" className="text-green-500 shrink-0"></i>
+                                        : <i data-lucide="x-circle" className="text-red-400 shrink-0"></i>
+                                    }
+                                </div>
+                            ))}
+                        </div>
+                        <button onClick={() => setGameState('START')} className="w-full bg-slate-800 text-white py-4 rounded-xl font-bold hover:bg-slate-900 transition-colors shadow-lg">ホームに戻る</button>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
